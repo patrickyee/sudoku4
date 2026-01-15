@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>4x4 Sudoku</title>
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                margin: 0;
+                background-color: #f0f0f0;
+                padding: 20px;
+            }
+
+            #app {
+                text-align: center;
+                width: 100%;
+                max-width: 500px;
+            }
+
+            h1 {
+                color: #333;
+                font-size: 48px;
+                margin: 20px 0;
+            }
+
+            .grid {
+                display: inline-grid;
+                grid-template-columns: repeat(4, 90px);
+                gap: 0;
+                margin: 30px 0;
+                outline: 4px solid #333;
+                width: fit-content;
+            }
+
+            .cell {
+                width: 90px;
+                height: 90px;
+                background-color: white;
+                border-top: 2px solid #ccc;
+                border-left: 2px solid #ccc;
+                font-size: 36px;
+                text-align: center;
+                box-sizing: border-box;
+            }
+
+            .cell:nth-child(n + 9):nth-child(-n + 12) {
+                border-top: 4px solid #333;
+            }
+
+            .cell:nth-child(4n + 3) {
+                border-left: 4px solid #333;
+            }
+
+            .cell input {
+                width: 100%;
+                height: 100%;
+                border: none;
+                text-align: center;
+                font-size: 36px;
+                outline: none;
+            }
+
+            .cell.fixed {
+                background-color: #e8e8e8;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .cell.error input {
+                background-color: #ffcccc;
+            }
+
+            .cell.correct input {
+                background-color: #ccffcc;
+            }
+
+            button {
+                padding: 16px 32px;
+                font-size: 20px;
+                background-color: #4caf50;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                cursor: pointer;
+                margin: 10px;
+                font-weight: bold;
+            }
+
+            button:hover {
+                background-color: #45a049;
+            }
+
+            button:active {
+                transform: scale(0.98);
+            }
+
+            .message {
+                margin-top: 30px;
+                font-size: 24px;
+                font-weight: bold;
+                min-height: 40px;
+            }
+
+            .message.success {
+                color: #4caf50;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <h1>4x4 數獨</h1>
+            <div style="font-size: 28px; margin: 20px 0; font-weight: bold">
+                <div>時間：{{ formattedTime }}</div>
+                <div
+                    v-if="bestTime > 0"
+                    style="color: #4caf50; margin-top: 10px"
+                >
+                    最佳時間：{{ formatTime(bestTime) }}
+                </div>
+            </div>
+            <div class="grid">
+                <div
+                    v-for="(cell, index) in puzzle"
+                    :key="index"
+                    :class="['cell', { fixed: cell.fixed, error: cell.error, correct: cell.correct }]"
+                >
+                    <span v-if="cell.fixed">{{ cell.value }}</span>
+                    <input
+                        v-else
+                        type="text"
+                        maxlength="1"
+                        v-model="cell.value"
+                        @input="validateCell(index)"
+                        @keypress="onlyNumbers"
+                    />
+                </div>
+            </div>
+            <div>
+                <button @click="newGame">新遊戲</button>
+                <button @click="checkSolution">檢查答案</button>
+            </div>
+            <div class="message" :class="{ success: isComplete }">
+                {{ message }}
+            </div>
+        </div>
+
+        <script>
+            const { createApp } = Vue;
+
+            createApp({
+                data() {
+                    return {
+                        puzzle: [],
+                        solution: [],
+                        message: "",
+                        isComplete: false,
+                        currentTime: 0,
+                        timerInterval: null,
+                        bestTime: 0,
+                    };
+                },
+                computed: {
+                    formattedTime() {
+                        return this.formatTime(this.currentTime);
+                    },
+                },
+                mounted() {
+                    this.newGame();
+                },
+                beforeUnmount() {
+                    if (this.timerInterval) {
+                        clearInterval(this.timerInterval);
+                    }
+                },
+                methods: {
+                    formatTime(seconds) {
+                        const mins = Math.floor(seconds / 60);
+                        const secs = seconds % 60;
+                        return `${mins}:${secs.toString().padStart(2, "0")}`;
+                    },
+                    startTimer() {
+                        this.currentTime = 0;
+                        if (this.timerInterval) {
+                            clearInterval(this.timerInterval);
+                        }
+                        const startTime = Date.now();
+                        this.timerInterval = setInterval(() => {
+                            this.currentTime = Math.floor(
+                                (Date.now() - startTime) / 1000,
+                            );
+                        }, 1000);
+                    },
+                    stopTimer() {
+                        if (this.timerInterval) {
+                            clearInterval(this.timerInterval);
+                            this.timerInterval = null;
+                        }
+                    },
+                    handleCompletion() {
+                        this.stopTimer();
+                        if (
+                            this.bestTime === 0 ||
+                            this.currentTime < this.bestTime
+                        ) {
+                            this.bestTime = this.currentTime;
+                            this.message = "🎉 恭喜！你成功解開了！新紀錄！";
+                        } else {
+                            this.message = "🎉 恭喜！你成功解開了！";
+                        }
+                        this.isComplete = true;
+                    },
+                    newGame() {
+                        this.message = "";
+                        this.isComplete = false;
+                        this.generatePuzzle();
+                        this.startTimer();
+                    },
+
+                    generatePuzzle() {
+                        const solutions = [
+                            [1, 2, 3, 4, 3, 4, 1, 2, 2, 3, 4, 1, 4, 1, 2, 3],
+                            [2, 1, 4, 3, 4, 3, 2, 1, 1, 4, 3, 2, 3, 2, 1, 4],
+                            [3, 4, 1, 2, 1, 2, 3, 4, 4, 3, 2, 1, 2, 1, 4, 3],
+                            [4, 3, 2, 1, 2, 1, 4, 3, 3, 2, 1, 4, 1, 4, 3, 2],
+                            [1, 3, 2, 4, 4, 2, 3, 1, 3, 1, 4, 2, 2, 4, 1, 3],
+                            [2, 4, 1, 3, 3, 1, 4, 2, 4, 2, 3, 1, 1, 3, 2, 4],
+                            [3, 2, 4, 1, 1, 4, 2, 3, 2, 4, 1, 3, 4, 3, 2, 1],
+                            [4, 1, 3, 2, 2, 3, 1, 4, 1, 3, 2, 4, 3, 4, 1, 2],
+                            [1, 4, 2, 3, 2, 3, 4, 1, 4, 2, 3, 1, 3, 1, 4, 2],
+                            [2, 3, 1, 4, 1, 4, 3, 2, 3, 1, 2, 4, 4, 2, 3, 1],
+                            [3, 1, 4, 2, 4, 2, 1, 3, 1, 3, 2, 4, 2, 4, 3, 1],
+                            [4, 2, 3, 1, 3, 1, 2, 4, 2, 4, 1, 3, 1, 3, 2, 4],
+                            [1, 3, 4, 2, 2, 4, 3, 1, 4, 1, 2, 3, 3, 2, 1, 4],
+                            [2, 4, 3, 1, 1, 3, 2, 4, 3, 2, 4, 1, 4, 1, 3, 2],
+                            [3, 1, 2, 4, 4, 2, 1, 3, 1, 4, 3, 2, 2, 3, 4, 1],
+                            [4, 2, 1, 3, 3, 1, 4, 2, 2, 3, 1, 4, 1, 4, 2, 3],
+                        ];
+
+                        this.solution =
+                            solutions[
+                                Math.floor(Math.random() * solutions.length)
+                            ];
+
+                        let cellsToRemove = 8;
+                        let removed = new Set();
+                        let attempts = 0;
+                        const maxAttempts = 20;
+
+                        while (attempts < maxAttempts) {
+                            removed = new Set();
+                            while (removed.size < cellsToRemove) {
+                                removed.add(Math.floor(Math.random() * 16));
+                            }
+
+                            const testPuzzle = this.solution.map(
+                                (value, index) =>
+                                    removed.has(index) ? 0 : value,
+                            );
+
+                            if (this.hasUniqueSolution(testPuzzle)) {
+                                break;
+                            }
+
+                            attempts++;
+                            if (attempts >= maxAttempts && cellsToRemove > 6) {
+                                cellsToRemove--;
+                                attempts = 0;
+                            }
+                        }
+
+                        this.puzzle = this.solution.map((value, index) => ({
+                            value: removed.has(index) ? "" : value,
+                            fixed: !removed.has(index),
+                            error: false,
+                            correct: false,
+                        }));
+                    },
+
+                    hasUniqueSolution(puzzle) {
+                        const solutions = [];
+                        this.solveSudoku([...puzzle], solutions, 2);
+                        return solutions.length === 1;
+                    },
+
+                    solveSudoku(grid, solutions, maxSolutions) {
+                        if (solutions.length >= maxSolutions) return;
+
+                        const emptyIndex = grid.findIndex((cell) => cell === 0);
+                        if (emptyIndex === -1) {
+                            solutions.push([...grid]);
+                            return;
+                        }
+
+                        const row = Math.floor(emptyIndex / 4);
+                        const col = emptyIndex % 4;
+
+                        for (let num = 1; num <= 4; num++) {
+                            if (this.isValidMove(grid, row, col, num)) {
+                                grid[emptyIndex] = num;
+                                this.solveSudoku(grid, solutions, maxSolutions);
+                                grid[emptyIndex] = 0;
+                            }
+                        }
+                    },
+
+                    isValidMove(grid, row, col, num) {
+                        for (let c = 0; c < 4; c++) {
+                            if (grid[row * 4 + c] === num) return false;
+                        }
+
+                        for (let r = 0; r < 4; r++) {
+                            if (grid[r * 4 + col] === num) return false;
+                        }
+
+                        const boxRow = Math.floor(row / 2) * 2;
+                        const boxCol = Math.floor(col / 2) * 2;
+                        for (let r = boxRow; r < boxRow + 2; r++) {
+                            for (let c = boxCol; c < boxCol + 2; c++) {
+                                if (grid[r * 4 + c] === num) return false;
+                            }
+                        }
+
+                        return true;
+                    },
+
+                    onlyNumbers(event) {
+                        const char = event.key;
+                        if (!/[1-4]/.test(char)) {
+                            event.preventDefault();
+                        }
+                    },
+
+                    validateCell(index) {
+                        const cell = this.puzzle[index];
+
+                        if (cell.value === "") {
+                            cell.error = false;
+                            cell.correct = false;
+                            return;
+                        }
+
+                        const value = parseInt(cell.value);
+                        if (isNaN(value) || value < 1 || value > 4) {
+                            cell.value = "";
+                            return;
+                        }
+
+                        const row = Math.floor(index / 4);
+                        const col = index % 4;
+
+                        let hasError = false;
+
+                        for (let c = 0; c < 4; c++) {
+                            const checkIndex = row * 4 + c;
+                            if (
+                                c !== col &&
+                                this.puzzle[checkIndex].value == value
+                            ) {
+                                hasError = true;
+                                break;
+                            }
+                        }
+
+                        if (!hasError) {
+                            for (let r = 0; r < 4; r++) {
+                                const checkIndex = r * 4 + col;
+                                if (
+                                    r !== row &&
+                                    this.puzzle[checkIndex].value == value
+                                ) {
+                                    hasError = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!hasError) {
+                            const boxRow = Math.floor(row / 2) * 2;
+                            const boxCol = Math.floor(col / 2) * 2;
+
+                            for (let r = boxRow; r < boxRow + 2; r++) {
+                                for (let c = boxCol; c < boxCol + 2; c++) {
+                                    const checkIndex = r * 4 + c;
+                                    if (
+                                        checkIndex !== index &&
+                                        this.puzzle[checkIndex].value == value
+                                    ) {
+                                        hasError = true;
+                                        break;
+                                    }
+                                }
+                                if (hasError) break;
+                            }
+                        }
+
+                        cell.error = hasError;
+                        cell.correct = !hasError && cell.value !== "";
+
+                        if (this.isPuzzleComplete()) {
+                            this.handleCompletion();
+                        }
+                    },
+
+                    checkSolution() {
+                        let allCorrect = true;
+
+                        for (let i = 0; i < 16; i++) {
+                            if (!this.puzzle[i].fixed) {
+                                if (this.puzzle[i].value == this.solution[i]) {
+                                    this.puzzle[i].correct = true;
+                                    this.puzzle[i].error = false;
+                                } else {
+                                    this.puzzle[i].error = true;
+                                    this.puzzle[i].correct = false;
+                                    allCorrect = false;
+                                }
+                            }
+                        }
+
+                        if (allCorrect && this.isPuzzleComplete()) {
+                            this.handleCompletion();
+                        } else if (!this.isPuzzleComplete()) {
+                            this.message = "繼續努力！請填滿所有格子。";
+                        } else {
+                            this.message = "有些格子不正確，再試試看！";
+                        }
+                    },
+
+                    isPuzzleComplete() {
+                        return (
+                            this.puzzle.every((cell) => cell.value !== "") &&
+                            this.puzzle.every((cell) => !cell.error)
+                        );
+                    },
+                },
+            }).mount("#app");
+        </script>
+    </body>
+</html>
