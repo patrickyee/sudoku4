@@ -2,7 +2,10 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
         <title>4x4 Sudoku</title>
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
         <style>
@@ -64,6 +67,16 @@
                 text-align: center;
                 font-size: 36px;
                 outline: none;
+                /* iOS Safari fixes */
+                -webkit-appearance: none;
+                appearance: none;
+                background-color: transparent;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 90px;
+                padding: 0;
+                margin: 0;
             }
 
             .cell.fixed {
@@ -76,10 +89,14 @@
 
             .cell.error input {
                 background-color: #ffcccc;
+                /* Force background color on iOS Safari */
+                -webkit-appearance: none;
             }
 
             .cell.correct input {
                 background-color: #ccffcc;
+                /* Force background color on iOS Safari */
+                -webkit-appearance: none;
             }
 
             button {
@@ -145,7 +162,9 @@
                     <span v-if="cell.fixed">{{ cell.value }}</span>
                     <input
                         v-else
-                        type="text"
+                        type="tel"
+                        inputmode="numeric"
+                        pattern="[1-4]"
                         maxlength="1"
                         v-model="cell.value"
                         @focus="recordOldValue(index)"
