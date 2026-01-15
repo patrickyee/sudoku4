@@ -140,7 +140,7 @@
                 <div
                     v-for="(cell, index) in puzzle"
                     :key="index"
-                    :class="['cell', { fixed: cell.fixed, error: cell.error, correct: cell.correct }]"
+                    :class="getCellClass(cell)"
                 >
                     <span v-if="cell.fixed">{{ cell.value }}</span>
                     <input
@@ -158,6 +158,27 @@
                 <button @click="newGame">新遊戲</button>
                 <button @click="checkSolution">檢查答案</button>
                 <button @click="undo" :disabled="!canUndo">復原</button>
+            </div>
+            <div style="margin-top: 20px; font-size: 20px">
+                <label
+                    style="
+                        cursor: pointer;
+                        display: inline-flex;
+                        align-items: center;
+                    "
+                >
+                    <input
+                        type="checkbox"
+                        v-model="showHints"
+                        style="
+                            width: 20px;
+                            height: 20px;
+                            margin-right: 10px;
+                            cursor: pointer;
+                        "
+                    />
+                    <span>顯示提示顏色</span>
+                </label>
             </div>
             <div class="message" :class="{ success: isComplete }">
                 {{ message }}
@@ -178,6 +199,7 @@
                         timerInterval: null,
                         bestTime: 0,
                         undoHistory: [],
+                        showHints: true,
                     };
                 },
                 computed: {
@@ -197,6 +219,14 @@
                     }
                 },
                 methods: {
+                    getCellClass(cell) {
+                        return {
+                            cell: true,
+                            fixed: cell.fixed,
+                            error: this.showHints && cell.error,
+                            correct: this.showHints && cell.correct,
+                        };
+                    },
                     formatTime(seconds) {
                         const mins = Math.floor(seconds / 60);
                         const secs = seconds % 60;
