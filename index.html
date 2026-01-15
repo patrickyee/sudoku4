@@ -32,6 +32,150 @@
                 margin: 20px 0;
             }
 
+            .header {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                position: relative;
+                width: 100%;
+            }
+
+            .hamburger {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none !important;
+                border: none;
+                cursor: pointer;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+                margin: 0;
+                z-index: 10;
+            }
+
+            .hamburger:hover {
+                background: none !important;
+                transform: translateY(-50%) !important;
+            }
+
+            .hamburger:active {
+                background: none !important;
+                transform: translateY(-50%) !important;
+            }
+
+            .hamburger span {
+                display: block;
+                width: 30px;
+                height: 3px;
+                background-color: #333;
+                border-radius: 2px;
+                pointer-events: none;
+            }
+
+            .settings-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+
+            .settings-modal {
+                background-color: white;
+                border-radius: 12px;
+                padding: 30px;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            }
+
+            .settings-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+            }
+
+            .settings-header h2 {
+                margin: 0;
+                font-size: 28px;
+                color: #333;
+            }
+
+            .close-btn {
+                background: none;
+                border: none;
+                font-size: 32px;
+                cursor: pointer;
+                color: #666;
+                padding: 0;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0;
+            }
+
+            .close-btn:hover {
+                color: #333;
+                background: none;
+                transform: none;
+            }
+
+            .settings-item {
+                margin-bottom: 25px;
+                text-align: left;
+            }
+
+            .settings-item label {
+                display: block;
+                font-size: 18px;
+                font-weight: bold;
+                margin-bottom: 10px;
+                color: #333;
+            }
+
+            .settings-item select {
+                width: 100%;
+                padding: 12px;
+                font-size: 16px;
+                border: 2px solid #ccc;
+                border-radius: 6px;
+                background-color: white;
+                cursor: pointer;
+            }
+
+            .settings-item select:focus {
+                outline: none;
+                border-color: #4caf50;
+            }
+
+            .checkbox-item {
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+            }
+
+            .checkbox-item input {
+                width: 24px;
+                height: 24px;
+                margin-right: 12px;
+                cursor: pointer;
+            }
+
+            .checkbox-item span {
+                font-size: 18px;
+            }
+
             .grid {
                 display: inline-grid;
                 grid-template-columns: repeat(4, 90px);
@@ -143,14 +287,53 @@
     </head>
     <body>
         <div id="app">
-            <h1>4x4 數獨</h1>
+            <div class="header">
+                <button class="hamburger" @click="openSettings">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <h1>{{ t.title }}</h1>
+            </div>
+
+            <div
+                class="settings-overlay"
+                v-if="showSettings"
+                @click.self="showSettings = false"
+            >
+                <div class="settings-modal">
+                    <div class="settings-header">
+                        <h2>{{ t.settings }}</h2>
+                        <button class="close-btn" @click="showSettings = false">
+                            &times;
+                        </button>
+                    </div>
+                    <div class="settings-item">
+                        <label>{{ t.language }}</label>
+                        <select
+                            v-model="currentLanguage"
+                            @change="changeLanguage"
+                        >
+                            <option value="zh">繁體中文</option>
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                        </select>
+                    </div>
+                    <div class="settings-item">
+                        <label class="checkbox-item">
+                            <input type="checkbox" v-model="showHints" />
+                            <span>{{ t.showHints }}</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
             <div style="font-size: 28px; margin: 20px 0; font-weight: bold">
-                <div>時間：{{ formattedTime }}</div>
+                <div>{{ t.time }}{{ formattedTime }}</div>
                 <div
                     v-if="bestTime > 0"
                     style="color: #4caf50; margin-top: 10px"
                 >
-                    最佳時間：{{ formatTime(bestTime) }}
+                    {{ t.bestTime }}{{ formatTime(bestTime) }}
                 </div>
             </div>
             <div class="grid">
@@ -174,30 +357,9 @@
                 </div>
             </div>
             <div>
-                <button @click="newGame">新遊戲</button>
-                <button @click="checkSolution">檢查答案</button>
-                <button @click="undo" :disabled="!canUndo">復原</button>
-            </div>
-            <div style="margin-top: 20px; font-size: 20px">
-                <label
-                    style="
-                        cursor: pointer;
-                        display: inline-flex;
-                        align-items: center;
-                    "
-                >
-                    <input
-                        type="checkbox"
-                        v-model="showHints"
-                        style="
-                            width: 20px;
-                            height: 20px;
-                            margin-right: 10px;
-                            cursor: pointer;
-                        "
-                    />
-                    <span>顯示提示顏色</span>
-                </label>
+                <button @click="newGame">{{ t.newGame }}</button>
+                <button @click="checkSolution">{{ t.checkSolution }}</button>
+                <button @click="undo" :disabled="!canUndo">{{ t.undo }}</button>
             </div>
             <div class="message" :class="{ success: isComplete }">
                 {{ message }}
@@ -206,6 +368,58 @@
 
         <script>
             const { createApp } = Vue;
+
+            const translations = {
+                zh: {
+                    title: "4x4 數獨",
+                    settings: "設定",
+                    language: "語言",
+                    showHints: "顯示提示顏色",
+                    time: "時間：",
+                    bestTime: "最佳時間：",
+                    newGame: "新遊戲",
+                    checkSolution: "檢查答案",
+                    undo: "復原",
+                    congratsNewRecord: "🎉 恭喜！你成功解開了！新紀錄！",
+                    congrats: "🎉 恭喜！你成功解開了！",
+                    keepGoing: "繼續努力！請填滿所有格子。",
+                    someIncorrect: "有些格子不正確，再試試看！",
+                },
+                en: {
+                    title: "4x4 Sudoku",
+                    settings: "Settings",
+                    language: "Language",
+                    showHints: "Show Hint Colors",
+                    time: "Time: ",
+                    bestTime: "Best Time: ",
+                    newGame: "New Game",
+                    checkSolution: "Check Solution",
+                    undo: "Undo",
+                    congratsNewRecord:
+                        "🎉 Congratulations! You solved it! New Record!",
+                    congrats: "🎉 Congratulations! You solved it!",
+                    keepGoing: "Keep going! Please fill all cells.",
+                    someIncorrect: "Some cells are incorrect, try again!",
+                },
+                es: {
+                    title: "4x4 Sudoku",
+                    settings: "Configuración",
+                    language: "Idioma",
+                    showHints: "Mostrar Colores de Ayuda",
+                    time: "Tiempo: ",
+                    bestTime: "Mejor Tiempo: ",
+                    newGame: "Nuevo Juego",
+                    checkSolution: "Verificar Solución",
+                    undo: "Deshacer",
+                    congratsNewRecord:
+                        "🎉 ¡Felicidades! ¡Lo resolviste! ¡Nuevo Récord!",
+                    congrats: "🎉 ¡Felicidades! ¡Lo resolviste!",
+                    keepGoing:
+                        "¡Sigue adelante! Por favor llena todas las celdas.",
+                    someIncorrect:
+                        "¡Algunas celdas son incorrectas, inténtalo de nuevo!",
+                },
+            };
 
             createApp({
                 data() {
@@ -219,6 +433,9 @@
                         bestTime: 0,
                         undoHistory: [],
                         showHints: true,
+                        showSettings: false,
+                        currentLanguage: "zh",
+                        translations: translations,
                     };
                 },
                 computed: {
@@ -228,8 +445,20 @@
                     canUndo() {
                         return this.undoHistory.length > 0;
                     },
+                    t() {
+                        return this.translations[this.currentLanguage];
+                    },
                 },
                 mounted() {
+                    const savedLanguage =
+                        localStorage.getItem("sudoku-language");
+                    if (savedLanguage && this.translations[savedLanguage]) {
+                        this.currentLanguage = savedLanguage;
+                    }
+                    const savedHints = localStorage.getItem("sudoku-hints");
+                    if (savedHints !== null) {
+                        this.showHints = savedHints === "true";
+                    }
                     this.newGame();
                 },
                 beforeUnmount() {
@@ -237,7 +466,21 @@
                         clearInterval(this.timerInterval);
                     }
                 },
+                watch: {
+                    showHints(newVal) {
+                        localStorage.setItem("sudoku-hints", newVal);
+                    },
+                },
                 methods: {
+                    openSettings() {
+                        this.showSettings = true;
+                    },
+                    changeLanguage() {
+                        localStorage.setItem(
+                            "sudoku-language",
+                            this.currentLanguage,
+                        );
+                    },
                     getCellClass(cell) {
                         return {
                             cell: true,
@@ -276,9 +519,9 @@
                             this.currentTime < this.bestTime
                         ) {
                             this.bestTime = this.currentTime;
-                            this.message = "🎉 恭喜！你成功解開了！新紀錄！";
+                            this.message = this.t.congratsNewRecord;
                         } else {
-                            this.message = "🎉 恭喜！你成功解開了！";
+                            this.message = this.t.congrats;
                         }
                         this.isComplete = true;
                     },
@@ -520,9 +763,9 @@
                         if (allCorrect && this.isPuzzleComplete()) {
                             this.handleCompletion();
                         } else if (!this.isPuzzleComplete()) {
-                            this.message = "繼續努力！請填滿所有格子。";
+                            this.message = this.t.keepGoing;
                         } else {
-                            this.message = "有些格子不正確，再試試看！";
+                            this.message = this.t.someIncorrect;
                         }
                     },
 
