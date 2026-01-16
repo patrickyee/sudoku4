@@ -17,19 +17,20 @@
                 min-height: 100vh;
                 margin: 0;
                 background-color: #f0f0f0;
-                padding: 20px;
+                padding: 5vw;
+                box-sizing: border-box;
             }
 
             #app {
                 text-align: center;
                 width: 100%;
-                max-width: 500px;
+                max-width: min(500px, 100vw - 10vw);
             }
 
             h1 {
                 color: #333;
-                font-size: 48px;
-                margin: 20px 0;
+                font-size: clamp(24px, 6vw, 48px);
+                margin: 2vh 0;
             }
 
             .header {
@@ -90,8 +91,8 @@
 
             .settings-modal {
                 background-color: white;
-                border-radius: 12px;
-                padding: 30px;
+                border-radius: clamp(8px, 2vw, 12px);
+                padding: clamp(20px, 4vw, 30px);
                 max-width: 400px;
                 width: 90%;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
@@ -101,12 +102,12 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                margin-bottom: 30px;
+                margin-bottom: clamp(20px, 4vw, 30px);
             }
 
             .settings-header h2 {
                 margin: 0;
-                font-size: 28px;
+                font-size: clamp(20px, 4vw, 28px);
                 color: #333;
             }
 
@@ -132,24 +133,24 @@
             }
 
             .settings-item {
-                margin-bottom: 25px;
+                margin-bottom: clamp(20px, 3vw, 25px);
                 text-align: left;
             }
 
             .settings-item label {
                 display: block;
-                font-size: 18px;
+                font-size: clamp(16px, 2.5vw, 18px);
                 font-weight: bold;
-                margin-bottom: 10px;
+                margin-bottom: clamp(8px, 1.5vw, 10px);
                 color: #333;
             }
 
             .settings-item select {
                 width: 100%;
-                padding: 12px;
-                font-size: 16px;
+                padding: clamp(10px, 1.5vw, 12px);
+                font-size: clamp(14px, 2vw, 16px);
                 border: 2px solid #ccc;
-                border-radius: 6px;
+                border-radius: clamp(4px, 0.8vw, 6px);
                 background-color: white;
                 cursor: pointer;
             }
@@ -166,42 +167,43 @@
             }
 
             .checkbox-item input {
-                width: 24px;
-                height: 24px;
-                margin-right: 12px;
+                width: clamp(20px, 3vw, 24px);
+                height: clamp(20px, 3vw, 24px);
+                margin-right: clamp(10px, 1.5vw, 12px);
                 cursor: pointer;
             }
 
             .checkbox-item span {
-                font-size: 18px;
+                font-size: clamp(16px, 2.5vw, 18px);
             }
 
             .grid {
                 display: inline-grid;
-                grid-template-columns: repeat(4, 90px);
+                grid-template-columns: repeat(4, 1fr);
                 gap: 0;
-                margin: 30px 0;
-                outline: 4px solid #333;
-                width: fit-content;
+                margin: 3vh 0;
+                outline: max(2px, 0.4vw) solid #333;
+                width: min(90vw, 400px);
+                max-width: 100%;
             }
 
             .cell {
-                width: 90px;
-                height: 90px;
+                width: 100%;
+                aspect-ratio: 1;
                 background-color: white;
-                border-top: 2px solid #ccc;
-                border-left: 2px solid #ccc;
-                font-size: 36px;
+                border-top: max(1px, 0.2vw) solid #ccc;
+                border-left: max(1px, 0.2vw) solid #ccc;
+                font-size: clamp(20px, 5vw, 36px);
                 text-align: center;
                 box-sizing: border-box;
             }
 
             .cell:nth-child(n + 9):nth-child(-n + 12) {
-                border-top: 4px solid #333;
+                border-top: max(2px, 0.4vw) solid #333;
             }
 
             .cell:nth-child(4n + 3) {
-                border-left: 4px solid #333;
+                border-left: max(2px, 0.4vw) solid #333;
             }
 
             .cell input {
@@ -209,7 +211,7 @@
                 height: 100%;
                 border: none;
                 text-align: center;
-                font-size: 36px;
+                font-size: clamp(20px, 5vw, 36px);
                 outline: none;
                 /* iOS Safari fixes */
                 -webkit-appearance: none;
@@ -218,7 +220,6 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                line-height: 90px;
                 padding: 0;
                 margin: 0;
             }
@@ -244,14 +245,14 @@
             }
 
             button {
-                padding: 16px 32px;
-                font-size: 20px;
+                padding: clamp(12px, 2vh, 16px) clamp(16px, 4vw, 32px);
+                font-size: clamp(14px, 2.5vw, 20px);
                 background-color: #4caf50;
                 color: white;
                 border: none;
-                border-radius: 8px;
+                border-radius: clamp(4px, 1vw, 8px);
                 cursor: pointer;
-                margin: 10px;
+                margin: clamp(5px, 1.5vw, 10px);
                 font-weight: bold;
             }
 
@@ -274,10 +275,10 @@
             }
 
             .message {
-                margin-top: 30px;
-                font-size: 24px;
+                margin-top: 3vh;
+                font-size: clamp(16px, 3vw, 24px);
                 font-weight: bold;
-                min-height: 40px;
+                min-height: clamp(30px, 5vh, 40px);
             }
 
             .message.success {
@@ -327,11 +328,17 @@
                     </div>
                 </div>
             </div>
-            <div style="font-size: 28px; margin: 20px 0; font-weight: bold">
+            <div
+                style="
+                    font-size: clamp(18px, 3.5vw, 28px);
+                    margin: 2vh 0;
+                    font-weight: bold;
+                "
+            >
                 <div>{{ t.time }}{{ formattedTime }}</div>
                 <div
                     v-if="bestTime > 0"
-                    style="color: #4caf50; margin-top: 10px"
+                    style="color: #4caf50; margin-top: 1vh"
                 >
                     {{ t.bestTime }}{{ formatTime(bestTime) }}
                 </div>
