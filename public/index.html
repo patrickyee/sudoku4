@@ -289,6 +289,12 @@
             .message.success {
                 color: #4caf50;
             }
+
+            .copyright {
+                margin-top: 3vh;
+                font-size: clamp(10px, 1.8vw, 12px);
+                color: #666;
+            }
         </style>
     </head>
     <body>
@@ -378,6 +384,7 @@
             <div class="message" :class="{ success: isComplete }">
                 {{ message }}
             </div>
+            <div class="copyright">© Patrick Yee</div>
         </div>
 
         <script>
@@ -482,6 +489,7 @@
                         showSettings: false,
                         currentLanguage: "zh",
                         translations: translations,
+                        manualCheckPerformed: false,
                     };
                 },
                 computed: {
@@ -531,8 +539,12 @@
                         return {
                             cell: true,
                             fixed: cell.fixed,
-                            error: this.showHints && cell.error,
-                            correct: this.showHints && cell.correct,
+                            error:
+                                (this.showHints || this.manualCheckPerformed) &&
+                                cell.error,
+                            correct:
+                                (this.showHints || this.manualCheckPerformed) &&
+                                cell.correct,
                         };
                     },
                     formatTime(seconds) {
@@ -583,6 +595,7 @@
                         this.message = "";
                         this.isComplete = false;
                         this.undoHistory = [];
+                        this.manualCheckPerformed = false;
                         this.generatePuzzle();
                         this.startTimer();
                     },
@@ -791,6 +804,7 @@
                     },
 
                     checkSolution() {
+                        this.manualCheckPerformed = true;
                         let allCorrect = true;
 
                         for (let i = 0; i < 16; i++) {
