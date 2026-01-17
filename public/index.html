@@ -810,7 +810,14 @@
 
                         for (let i = 0; i < 16; i++) {
                             if (!this.puzzle[i].fixed) {
-                                if (this.puzzle[i].value == this.solution[i]) {
+                                if (this.puzzle[i].value === "") {
+                                    // Don't show error for empty cells in manual check
+                                    this.puzzle[i].error = false;
+                                    this.puzzle[i].correct = false;
+                                    allCorrect = false;
+                                } else if (
+                                    this.puzzle[i].value == this.solution[i]
+                                ) {
                                     this.puzzle[i].correct = true;
                                     this.puzzle[i].error = false;
                                 } else {
