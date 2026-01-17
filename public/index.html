@@ -490,6 +490,7 @@
                         currentLanguage: "zh",
                         translations: translations,
                         manualCheckPerformed: false,
+                        hintTimeout: null,
                     };
                 },
                 computed: {
@@ -826,6 +827,25 @@
                             this.message = this.t.keepGoing;
                         } else {
                             this.message = this.t.someIncorrect;
+                        }
+
+                        // If hints are not enabled, show hint colors for 5 seconds then reset
+                        if (!this.showHints) {
+                            // Clear any existing timeout
+                            if (this.hintTimeout) {
+                                clearTimeout(this.hintTimeout);
+                            }
+                            this.hintTimeout = setTimeout(() => {
+                                this.manualCheckPerformed = false;
+                                // Reset error and correct states for non-fixed cells
+                                for (let i = 0; i < 16; i++) {
+                                    if (!this.puzzle[i].fixed) {
+                                        this.puzzle[i].error = false;
+                                        this.puzzle[i].correct = false;
+                                    }
+                                }
+                                this.hintTimeout = null;
+                            }, 5000);
                         }
                     },
 
